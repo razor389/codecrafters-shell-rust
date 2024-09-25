@@ -6,7 +6,7 @@ fn main() {
     let stdin = io::stdin();
 
     // List of built-in commands
-    let builtins = vec!["echo", "exit", "type"];
+    let builtins = vec!["echo", "exit", "type", "pwd"];
 
     loop {
         // Print the shell prompt
