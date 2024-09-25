@@ -8,7 +8,7 @@ fn main() {
     let builtins = vec!["echo", "exit", "type"];
 
     loop {
-        // Print the prompt
+        // Print the shell prompt
         print!("$ ");
         io::stdout().flush().unwrap();
 
