@@ -6,7 +6,7 @@ fn main() {
     let stdin = io::stdin();
 
     // List of built-in commands
-    let builtins = vec!["echo", "exit", "type", "pwd"];
+    let builtins = vec!["echo", "exit", "type", "pwd", "cd"];
 
     loop {
         // Print the shell prompt
@@ -31,6 +31,13 @@ fn main() {
             let echo_message = &command[5..]; // Get everything after 'echo '
             println!("{}", echo_message);
         } 
+        // Handle the 'cd' command
+        else if command.starts_with("cd ") {
+            let target_dir = &command[3..]; // Extract the directory path after 'cd '
+            if let Err(e) = env::set_current_dir(target_dir) {
+                eprintln!("cd: {}: {}", target_dir, e);
+            }
+        }
         // Check if the command is 'pwd'
         else if command == "pwd" {
             match env::current_dir() {
