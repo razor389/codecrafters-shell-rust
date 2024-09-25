@@ -19,7 +19,6 @@ fn main() {
 
         // Check if the command is 'exit 0'
         if command == "exit 0" {
-            println!("Exiting with status 0...");
             process::exit(0); // Exit with status 0
         }
 
