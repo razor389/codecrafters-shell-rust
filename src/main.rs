@@ -2,15 +2,20 @@
 use std::io::{self, Write};
 
 fn main() {
-    // Uncomment this block to pass the first stage
+    // Prompt the user for input
     print!("$ ");
     io::stdout().flush().unwrap();
 
     // Wait for user input
     let stdin = io::stdin();
     let mut input = String::new();
-    match stdin.read_line(&mut input) {
-        Ok(_n) => println!("{}: command not found", input),
-        Err(error) => println!("error: {error}"),
+    stdin.read_line(&mut input).unwrap();
+
+    // Trim the input to remove any trailing newline or spaces
+    let command = input.trim();
+
+    // Print the '<command>: command not found' message if a command is entered
+    if !command.is_empty() {
+        println!("{}: command not found", command);
     }
 }
