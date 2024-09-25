@@ -4,7 +4,7 @@ use std::{env, fs, process::{self, Command}};
 
 fn main() {
     let stdin = io::stdin();
-    
+
     // List of built-in commands
     let builtins = vec!["echo", "exit", "type"];
 
@@ -55,7 +55,7 @@ fn main() {
                 if let Some(executable_path) = find_in_path(executable) {
                     // Execute the command with arguments
                     match run_command(&executable_path, &args) {
-                        Ok(output) => println!("{}", output),
+                        Ok(output) => print!("{}", output),
                         Err(err) => eprintln!("Error: {}", err),
                     }
                 } else {
