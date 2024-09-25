@@ -4,6 +4,8 @@ use std::process;
 
 fn main() {
     let stdin = io::stdin();
+    // List of built-in commands
+    let builtins = vec!["echo", "exit", "type"];
 
     loop {
         // Print the prompt
@@ -27,6 +29,16 @@ fn main() {
             // Extract the part after 'echo ' and print it
             let echo_message = &command[5..]; // Get everything after 'echo '
             println!("{}", echo_message);
+        } // Check if the command starts with 'type'
+        else if command.starts_with("type ") {
+            let target_command = &command[5..]; // Get the command after 'type '
+            
+            // Check if the target command is a built-in command
+            if builtins.contains(&target_command) {
+                println!("{} is a shell builtin", target_command);
+            } else {
+                println!("{}: not found", target_command);
+            }
         } else if !command.is_empty() {
             // If command is not empty and isn't 'echo', show the 'command not found' message
             println!("{}: command not found", command);
