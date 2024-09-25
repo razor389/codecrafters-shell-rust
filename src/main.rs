@@ -4,6 +4,7 @@ use std::{env, fs, process::{self, Command}};
 
 fn main() {
     let stdin = io::stdin();
+    
     // List of built-in commands
     let builtins = vec!["echo", "exit", "type"];
 
