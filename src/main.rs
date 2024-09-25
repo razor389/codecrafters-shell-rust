@@ -30,7 +30,15 @@ fn main() {
             // Extract the part after 'echo ' and print it
             let echo_message = &command[5..]; // Get everything after 'echo '
             println!("{}", echo_message);
-        } // Check if the command starts with 'type'
+        } 
+        // Check if the command is 'pwd'
+        else if command == "pwd" {
+            match env::current_dir() {
+                Ok(path) => println!("{}", path.display()),
+                Err(e) => eprintln!("Error getting current directory: {}", e),
+            }
+        }
+        // Check if the command starts with 'type'
         else if command.starts_with("type ") {
             let target_command = &command[5..]; // Get the command after 'type '
             
