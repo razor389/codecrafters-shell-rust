@@ -1,6 +1,6 @@
 #[allow(unused_imports)]
 use std::io::{self, Write};
-use std::process;
+use std::{env, fs, process};
 
 fn main() {
     let stdin = io::stdin();
@@ -36,7 +36,12 @@ fn main() {
             // Check if the target command is a built-in command
             if builtins.contains(&target_command) {
                 println!("{} is a shell builtin", target_command);
-            } else {
+            } 
+            // Check if the target command is an executable in the PATH
+            else if let Some(executable_path) = find_in_path(target_command) {
+                println!("{} is {}", target_command, executable_path);
+            }
+            else {
                 println!("{}: not found", target_command);
             }
         } else if !command.is_empty() {
@@ -44,4 +49,19 @@ fn main() {
             println!("{}: command not found", command);
         }
     }
+}
+
+// Function to search for an executable in the system's PATH
+fn find_in_path(executable: &str) -> Option<String> {
+    if let Ok(path_var) = env::var("PATH") {
+        for path in path_var.split(':') {
+            let full_path = format!("{}/{}", path, executable);
+
+            // Check if the file exists and is executable
+            if fs::metadata(&full_path).is_ok() {
+                return Some(full_path);
+            }
+        }
+    }
+    None
 }
