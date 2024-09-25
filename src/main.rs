@@ -1,6 +1,6 @@
 #[allow(unused_imports)]
 use std::io::{self, Write};
-use std::{env, fs, process};
+use std::{env, fs, process::{self, Command}};
 
 fn main() {
     let stdin = io::stdin();
@@ -44,9 +44,23 @@ fn main() {
             else {
                 println!("{}: not found", target_command);
             }
-        } else if !command.is_empty() {
-            // If command is not empty and isn't 'echo', show the 'command not found' message
-            println!("{}: command not found", command);
+        } 
+         // Try to run the command as an executable with arguments
+         else if !command.is_empty() {
+            let mut parts = command.split_whitespace();
+            if let Some(executable) = parts.next() {
+                let args: Vec<&str> = parts.collect();
+                
+                if let Some(executable_path) = find_in_path(executable) {
+                    // Execute the command with arguments
+                    match run_command(&executable_path, &args) {
+                        Ok(output) => println!("{}", output),
+                        Err(err) => eprintln!("Error: {}", err),
+                    }
+                } else {
+                    println!("{}: command not found", executable);
+                }
+            }
         }
     }
 }
@@ -64,4 +78,18 @@ fn find_in_path(executable: &str) -> Option<String> {
         }
     }
     None
+}
+
+// Function to run a command with arguments
+fn run_command(executable: &str, args: &[&str]) -> Result<String, String> {
+    let output = Command::new(executable)
+        .args(args)
+        .output()
+        .map_err(|e| format!("Failed to execute '{}': {}", executable, e))?;
+
+    if output.status.success() {
+        Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    } else {
+        Err(String::from_utf8_lossy(&output.stderr).to_string())
+    }
 }
