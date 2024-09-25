@@ -34,8 +34,8 @@ fn main() {
         // Handle the 'cd' command
         else if command.starts_with("cd ") {
             let target_dir = &command[3..]; // Extract the directory path after 'cd '
-            if let Err(e) = env::set_current_dir(target_dir) {
-                eprintln!("cd: {}: {}", target_dir, e);
+            if let Err(_e) = env::set_current_dir(target_dir) {
+                eprintln!("cd: {}: No such file or directory", target_dir);
             }
         }
         // Check if the command is 'pwd'
