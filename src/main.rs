@@ -31,6 +31,7 @@ fn main() {
             let echo_message = &command[5..]; // Get everything after 'echo '
             println!("{}", echo_message);
         } 
+        
         // Handle the 'cd' command
         else if command.starts_with("cd ") {
             let target_dir = &command[3..]; // Extract the directory path after 'cd '
