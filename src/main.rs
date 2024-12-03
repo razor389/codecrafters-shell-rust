@@ -53,26 +53,20 @@ fn main() {
         }
 
         // Handle the 'cd' command
-        if command.starts_with("cd ") {
-            // Extract the target directory
-            let target_dir = &command[3..].trim();
-
-            // Handle 'cd ~' or 'cd' (home directory)
-            let dir_to_change = if target_dir == "~" || target_dir.is_empty() {
+        else if command.starts_with("cd ") {
+            let target_dir = &command[3..]; // Extract the directory path after 'cd '
+            // Handle 'cd ~' by changing to the home directory
+            let dir_to_change = if target_dir == "~" {
+                // Get the home directory from the HOME environment variable
                 env::var("HOME").unwrap_or_else(|_| String::from("/"))
             } else {
                 target_dir.to_string()
             };
-
-            // Attempt to change the directory
-            if let Err(e) = env::set_current_dir(&dir_to_change) {
-                eprintln!("cd: {}: {}", dir_to_change, e);
+            if let Err(_e) = env::set_current_dir(&dir_to_change) {
+                eprintln!("cd: {}: No such file or directory", dir_to_change);
             }
-
-            // Explicitly print the prompt for the next command
-            continue;
         }
-
+        
         // Check if the command is 'pwd'
         else if command == "pwd" {
             match env::current_dir() {
