@@ -30,11 +30,12 @@ fn main() {
             // Extract the part after 'echo '
             let echo_message = &command[5..];
         
-            // Parse and process arguments while handling quotes and special characters
+            // Initialize variables
             let mut result = String::new();
             let mut current_segment = String::new();
             let mut in_quotes = false;
             let mut quote_char = '\0';
+            let mut needs_space = false;
         
             let mut chars = echo_message.chars().peekable();
             while let Some(c) = chars.next() {
@@ -43,17 +44,29 @@ fn main() {
                         if in_quotes && c == quote_char {
                             // End of quoted segment
                             in_quotes = false;
-                            if quote_char == '"' {
-                                let interpreted_segment = interpret_special_characters(&current_segment);
-                                result.push_str(&interpreted_segment);
-                            } else {
-                                result.push_str(&current_segment);
+                            if !current_segment.is_empty() {
+                                if !result.is_empty() && needs_space {
+                                    result.push(' ');
+                                    needs_space = false;
+                                }
+                                if quote_char == '"' {
+                                    let interpreted_segment = interpret_special_characters(&current_segment);
+                                    result.push_str(&interpreted_segment);
+                                } else {
+                                    result.push_str(&current_segment);
+                                }
+                                current_segment.clear();
+                                // Do not set needs_space here
                             }
-                            current_segment.clear();
                         } else if !in_quotes {
                             // Start of quoted segment
                             in_quotes = true;
                             quote_char = c;
+                            // Check if we need to add a space before starting a new segment
+                            if needs_space && !result.is_empty() {
+                                result.push(' ');
+                                needs_space = false;
+                            }
                         } else {
                             // Inside quotes, include the quote character
                             current_segment.push(c);
@@ -87,12 +100,20 @@ fn main() {
                     ' ' if !in_quotes => {
                         // Space outside quotes indicates separation between words
                         if !current_segment.is_empty() {
+                            if !result.is_empty() {
+                                result.push(' ');
+                            }
                             result.push_str(&current_segment);
-                            result.push(' ');
                             current_segment.clear();
                         }
+                        needs_space = true;
                     }
                     _ => {
+                        // Before adding to current_segment, check needs_space
+                        if needs_space && !result.is_empty() && current_segment.is_empty() {
+                            result.push(' ');
+                            needs_space = false;
+                        }
                         current_segment.push(c);
                     }
                 }
@@ -100,17 +121,19 @@ fn main() {
         
             // Add any remaining segment
             if !current_segment.is_empty() {
-                //println!("adding segment: {}", &current_segment);
+                if !result.is_empty() && needs_space {
+                    result.push(' ');
+                }
                 result.push_str(&current_segment);
             }
         
-            // Trim trailing space and print
-            println!("{}", result.trim());
+            // Print the result
+            println!("{}", result);
         
             // Continue to the next command
             continue;
-        }                
-                   
+        }
+             
         // Handle the 'cd' command
         if command.starts_with("cd ") || command == "cd" {
             let args = if command.len() > 2 { &command[3..].trim() } else { "" }; // Extract the part after 'cd', or empty for just 'cd'
