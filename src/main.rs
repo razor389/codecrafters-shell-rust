@@ -49,10 +49,12 @@ fn main() {
                         in_quotes = false;
                         if quote_char == '"' {
                             // Interpret special characters in double-quoted segments
-                            current_segment.push_str(&interpret_special_characters(&current_segment));
+                            let interpreted_segment = interpret_special_characters(&current_segment);
+                            result.push_str(&interpreted_segment);
+                        } else {
+                            // Add single-quoted segments as-is
+                            result.push_str(&current_segment);
                         }
-                        // No need to process single quotes differently here
-                        result.push_str(&current_segment);
                         result.push(' ');
                         current_segment.clear();
                     }
@@ -60,7 +62,7 @@ fn main() {
                         // Outside quotes: treat backslash as escape character
                         if let Some(&next) = chars.peek() {
                             if next == ' ' {
-                                current_segment.push(' '); // Correct: add space to current_segment
+                                current_segment.push(' '); // Add escaped space to current_segment
                                 chars.next(); // Consume the escaped space
                             } else {
                                 current_segment.push(next); // Add the escaped character
@@ -93,7 +95,8 @@ fn main() {
         
             // Continue to the next command
             continue;
-        }                        
+        }
+                          
 
         // Handle the 'cd' command
         if command.starts_with("cd ") || command == "cd" {
