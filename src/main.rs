@@ -49,27 +49,27 @@ fn main() {
                         in_quotes = false;
                         if quote_char == '"' {
                             // Interpret special characters in double-quoted segments
-                            result.push_str(&interpret_special_characters(&current_segment));
-                        } else {
-                            // Add single-quoted segments as-is
-                            result.push_str(&current_segment);
+                            current_segment.push_str(&interpret_special_characters(&current_segment));
                         }
+                        // No need to process single quotes differently here
+                        result.push_str(&current_segment);
                         result.push(' ');
                         current_segment.clear();
                     }
                     '\\' if !in_quotes => {
-                        // Outside quotes: treat backslash as escape for space
+                        // Outside quotes: treat backslash as escape character
                         if let Some(&next) = chars.peek() {
                             if next == ' ' {
-                                result.push(' '); // Add a space
+                                current_segment.push(' '); // Correct: add space to current_segment
                                 chars.next(); // Consume the escaped space
                             } else {
-                                current_segment.push(c); // Preserve literal backslash
+                                current_segment.push(next); // Add the escaped character
+                                chars.next(); // Consume the escaped character
                             }
                         }
                     }
                     ' ' if !in_quotes => {
-                        // Add a space between unquoted parts
+                        // Space outside quotes indicates separation between words
                         if !current_segment.is_empty() {
                             result.push_str(&current_segment);
                             result.push(' ');
@@ -93,7 +93,7 @@ fn main() {
         
             // Continue to the next command
             continue;
-        }                
+        }                        
 
         // Handle the 'cd' command
         if command.starts_with("cd ") || command == "cd" {
