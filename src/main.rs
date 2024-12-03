@@ -100,7 +100,7 @@ fn main() {
         
             // Add any remaining segment
             if !current_segment.is_empty() {
-                println!("adding segment: {}", &current_segment);
+                //println!("adding segment: {}", &current_segment);
                 result.push_str(&current_segment);
             }
         
