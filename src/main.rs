@@ -40,8 +40,12 @@ fn main() {
                 let interpreted_message = interpret_special_characters(trimmed_message);
                 println!("{}", interpreted_message);
             } else {
-                // Default behavior: print the message as-is
-                println!("{}", echo_message);
+                // Normalize spaces: Split, trim, and join
+                let normalized_message = echo_message
+                    .split_whitespace()
+                    .collect::<Vec<&str>>()
+                    .join(" ");
+                println!("{}", normalized_message);
             }
         }
 
