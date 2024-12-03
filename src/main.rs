@@ -39,45 +39,38 @@ fn main() {
             let mut chars = echo_message.chars().peekable();
             while let Some(c) = chars.next() {
                 match c {
-                    '\'' | '"' if !in_quotes => {
-                        // Start a quoted segment
-                        in_quotes = true;
-                        quote_char = c;
-                    }
-                    c if c == quote_char && in_quotes => {
-                        // End a quoted segment
-                        in_quotes = false;
-                        if quote_char == '"' {
-                            // Interpret special characters in double-quoted segments
-                            let interpreted_segment = interpret_special_characters(&current_segment);
-                            result.push_str(&interpreted_segment);
+                    '\'' | '"' => {
+                        if in_quotes && c == quote_char {
+                            // End of quoted segment
+                            in_quotes = false;
+                            if quote_char == '"' {
+                                let interpreted_segment = interpret_special_characters(&current_segment);
+                                result.push_str(&interpreted_segment);
+                            } else {
+                                result.push_str(&current_segment);
+                            }
+                            current_segment.clear();
+                        } else if !in_quotes {
+                            // Start of quoted segment
+                            in_quotes = true;
+                            quote_char = c;
                         } else {
-                            // Add single-quoted segments as-is
-                            result.push_str(&current_segment);
+                            // Inside quotes, include the quote character
+                            current_segment.push(c);
                         }
-                        result.push(' ');
-                        current_segment.clear();
                     }
                     '\\' => {
-                        // Handle backslashes
                         if in_quotes && quote_char == '"' {
-                            // Inside double quotes, backslashes can escape certain characters
-                            if let Some(&next_char) = chars.peek() {
-                                match next_char {
-                                    '\\' | '$' | '"' | '`' | 'n' | 't' => {
-                                        current_segment.push('\\');
-                                        // The backslash will be handled in interpret_special_characters
-                                    }
-                                    _ => {
-                                        current_segment.push('\\');
-                                    }
-                                }
+                            // Inside double quotes, backslash escapes certain characters
+                            if let Some(next_char) = chars.next() {
+                                current_segment.push('\\');
+                                current_segment.push(next_char);
                             } else {
-                                // Trailing backslash inside double quotes
+                                // Trailing backslash inside quotes
                                 current_segment.push('\\');
                             }
                         } else {
-                            // Outside quotes or inside single quotes, backslash escapes the next character
+                            // Outside quotes or inside single quotes
                             if let Some(next_char) = chars.next() {
                                 current_segment.push(next_char);
                             } else {
@@ -95,7 +88,6 @@ fn main() {
                         }
                     }
                     _ => {
-                        // Append to the current segment
                         current_segment.push(c);
                     }
                 }
@@ -111,7 +103,7 @@ fn main() {
         
             // Continue to the next command
             continue;
-        }        
+        }                
                    
         // Handle the 'cd' command
         if command.starts_with("cd ") || command == "cd" {
@@ -283,10 +275,9 @@ fn interpret_special_characters(input: &str) -> String {
                     't' => result.push('\t'),
                     '\\' => result.push('\\'),
                     '"' => result.push('"'), // Handle escaped double quote
-                    '$' => result.push('$'), // Handle escaped dollar sign
+                    '$' => result.push('$'),  // Handle escaped dollar sign
                     _ => {
                         // Preserve the backslash and the character if not a valid escape
-                        result.push('\\');
                         result.push(next);
                     }
                 }
@@ -308,7 +299,6 @@ fn interpret_special_characters(input: &str) -> String {
             if let Ok(value) = env::var(&var_name) {
                 result.push_str(&value);
             } else {
-                // If the variable is not found, leave it as is
                 result.push('$');
                 result.push_str(&var_name);
             }
@@ -319,3 +309,4 @@ fn interpret_special_characters(input: &str) -> String {
 
     result
 }
+
