@@ -86,6 +86,19 @@ fn main() {
                 println!("{}: not found", target_command);
             }
         } 
+        // Check if the command starts with 'cat'
+        if command.starts_with("cat ") {
+            // Extract the file paths after 'cat '
+            let file_paths = &command[4..];
+            // Split the file paths and process each
+            for file_path in file_paths.split_whitespace() {
+                match fs::read_to_string(file_path) {
+                    Ok(content) => print!("{}", content),
+                    Err(err) => eprintln!("cat: {}: {}", file_path, err),
+                }
+            }
+        }
+
          // Try to run the command as an executable with arguments
          else if !command.is_empty() {
             let mut parts = command.split_whitespace();
