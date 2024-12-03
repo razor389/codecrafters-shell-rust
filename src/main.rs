@@ -30,7 +30,7 @@ fn main() {
             // Extract the part after 'echo '
             let echo_message = &command[5..];
         
-            // Parse and process arguments while handling quotes
+            // Parse and process arguments while handling quotes and special characters
             let mut result = String::new();
             let mut current_segment = String::new();
             let mut in_quotes = false;
@@ -46,7 +46,13 @@ fn main() {
                     c if c == quote_char && in_quotes => {
                         // End a quoted segment
                         in_quotes = false;
-                        result.push_str(&current_segment);
+                        if quote_char == '"' {
+                            // Interpret special characters in double-quoted segments
+                            result.push_str(&interpret_special_characters(&current_segment));
+                        } else {
+                            // Add single-quoted segments as-is
+                            result.push_str(&current_segment);
+                        }
                         result.push(' ');
                         current_segment.clear();
                     }
@@ -80,7 +86,6 @@ fn main() {
             // Continue to the next command
             continue;
         }
-        
 
         // Handle the 'cd' command
         if command.starts_with("cd ") || command == "cd" {
