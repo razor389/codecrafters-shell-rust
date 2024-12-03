@@ -30,8 +30,8 @@ fn main() {
             // Extract the part after 'echo '
             let echo_message = &command[5..];
         
-            // Parse and process arguments while handling quotes and special characters
-            let mut result = String::new();
+            // Use a vector to store segments
+            let mut segments = Vec::new();
             let mut current_segment = String::new();
             let mut in_quotes = false;
             let mut quote_char = '\0';
@@ -45,9 +45,9 @@ fn main() {
                             in_quotes = false;
                             if quote_char == '"' {
                                 let interpreted_segment = interpret_special_characters(&current_segment);
-                                result.push_str(&interpreted_segment);
+                                segments.push(interpreted_segment);
                             } else {
-                                result.push_str(&current_segment);
+                                segments.push(current_segment.clone());
                             }
                             current_segment.clear();
                         } else if !in_quotes {
@@ -67,7 +67,7 @@ fn main() {
                                     current_segment.push('\\');
                                     current_segment.push(next_char);
                                 } else {
-                                    // Trailing backslash inside double quotes
+                                    // Trailing backslash inside quotes
                                     current_segment.push('\\');
                                 }
                             } else {
@@ -87,10 +87,11 @@ fn main() {
                     ' ' if !in_quotes => {
                         // Space outside quotes indicates separation between words
                         if !current_segment.is_empty() {
-                            result.push_str(&current_segment);
-                            result.push(' ');
+                            segments.push(current_segment.clone());
                             current_segment.clear();
                         }
+                        // If current_segment is empty, we skip adding to segments
+                        // This effectively normalizes multiple spaces to a single separator
                     }
                     _ => {
                         current_segment.push(c);
@@ -100,15 +101,15 @@ fn main() {
         
             // Add any remaining segment
             if !current_segment.is_empty() {
-                result.push_str(&current_segment);
+                segments.push(current_segment);
             }
         
-            // Trim trailing space and print
-            println!("{}", result.trim());
+            // Join segments with spaces and print
+            println!("{}", segments.join(" "));
         
             // Continue to the next command
             continue;
-        }                
+        }                      
                    
         // Handle the 'cd' command
         if command.starts_with("cd ") || command == "cd" {
