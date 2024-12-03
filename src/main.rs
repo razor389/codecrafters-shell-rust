@@ -60,21 +60,26 @@ fn main() {
                         }
                     }
                     '\\' => {
-                        if in_quotes && quote_char == '"' {
-                            // Inside double quotes, backslash escapes certain characters
-                            if let Some(next_char) = chars.next() {
-                                current_segment.push('\\');
-                                current_segment.push(next_char);
+                        if in_quotes {
+                            if quote_char == '"' {
+                                // Inside double quotes, backslash escapes certain characters
+                                if let Some(next_char) = chars.next() {
+                                    current_segment.push('\\');
+                                    current_segment.push(next_char);
+                                } else {
+                                    // Trailing backslash inside double quotes
+                                    current_segment.push('\\');
+                                }
                             } else {
-                                // Trailing backslash inside quotes
+                                // Inside single quotes, backslash is treated literally
                                 current_segment.push('\\');
                             }
                         } else {
-                            // Outside quotes or inside single quotes
+                            // Outside quotes, backslash escapes the next character
                             if let Some(next_char) = chars.next() {
                                 current_segment.push(next_char);
                             } else {
-                                // Trailing backslash
+                                // Trailing backslash outside quotes
                                 current_segment.push('\\');
                             }
                         }
