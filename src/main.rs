@@ -47,6 +47,9 @@ fn main() {
                     .join(" ");
                 println!("{}", normalized_message);
             }
+
+            // Explicitly print the prompt for the next command
+            continue;
         }
 
         // Handle the 'cd' command
