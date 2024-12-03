@@ -64,8 +64,8 @@ fn main() {
             };
 
             // Attempt to change the directory
-            if let Err(e) = env::set_current_dir(&target_dir) {
-                eprintln!("cd: {}: {}", target_dir, e);
+            if let Err(_) = env::set_current_dir(&target_dir) {
+                eprintln!("cd: {}: No such file or directory", target_dir);
             }
 
             // Explicitly continue to the next command
