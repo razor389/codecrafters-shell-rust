@@ -78,6 +78,8 @@ fn main() {
                 Ok(path) => println!("{}", path.display()),
                 Err(e) => eprintln!("Error getting current directory: {}", e),
             }
+
+            continue;
         }
         // Check if the command starts with 'type'
         else if command.starts_with("type ") {
@@ -94,6 +96,8 @@ fn main() {
             else {
                 println!("{}: not found", target_command);
             }
+
+            continue;
         } 
         // Check if the command starts with 'cat'
         if command.starts_with("cat ") {
@@ -170,6 +174,7 @@ fn main() {
                     println!("{}: command not found", executable);
                 }
             }
+            continue;
         }
     }
 }
