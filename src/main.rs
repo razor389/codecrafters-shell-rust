@@ -58,15 +58,31 @@ fn main() {
                         result.push(' ');
                         current_segment.clear();
                     }
-                    '\\' if !in_quotes => {
-                        // Outside quotes: treat backslash as escape character
-                        if let Some(&next) = chars.peek() {
-                            if next == ' ' {
-                                current_segment.push(' '); // Add escaped space to current_segment
-                                chars.next(); // Consume the escaped space
+                    '\\' => {
+                        // Handle backslashes
+                        if in_quotes && quote_char == '"' {
+                            // Inside double quotes, backslashes can escape certain characters
+                            if let Some(&next_char) = chars.peek() {
+                                match next_char {
+                                    '\\' | '$' | '"' | '`' | 'n' | 't' => {
+                                        current_segment.push('\\');
+                                        // The backslash will be handled in interpret_special_characters
+                                    }
+                                    _ => {
+                                        current_segment.push('\\');
+                                    }
+                                }
                             } else {
-                                current_segment.push(next); // Add the escaped character
-                                chars.next(); // Consume the escaped character
+                                // Trailing backslash inside double quotes
+                                current_segment.push('\\');
+                            }
+                        } else {
+                            // Outside quotes or inside single quotes, backslash escapes the next character
+                            if let Some(next_char) = chars.next() {
+                                current_segment.push(next_char);
+                            } else {
+                                // Trailing backslash
+                                current_segment.push('\\');
                             }
                         }
                     }
@@ -95,9 +111,8 @@ fn main() {
         
             // Continue to the next command
             continue;
-        }
-                          
-
+        }        
+                   
         // Handle the 'cd' command
         if command.starts_with("cd ") || command == "cd" {
             let args = if command.len() > 2 { &command[3..].trim() } else { "" }; // Extract the part after 'cd', or empty for just 'cd'
@@ -262,28 +277,40 @@ fn interpret_special_characters(input: &str) -> String {
     while let Some(c) = chars.next() {
         if c == '\\' {
             // Handle escaped characters
-            if let Some(&next) = chars.peek() {
+            if let Some(next) = chars.next() {
                 match next {
-                    'n' => {
-                        result.push('\n');
-                        chars.next(); // Consume 'n'
-                    }
-                    't' => {
-                        result.push('\t');
-                        chars.next(); // Consume 't'
-                    }
-                    '\\' => {
-                        result.push('\\');
-                        chars.next(); // Consume '\\'
-                    }
+                    'n' => result.push('\n'),
+                    't' => result.push('\t'),
+                    '\\' => result.push('\\'),
+                    '"' => result.push('"'), // Handle escaped double quote
+                    '$' => result.push('$'), // Handle escaped dollar sign
                     _ => {
-                        // Preserve the backslash if it's not escaping a valid character
-                        result.push(c);
+                        // Preserve the backslash and the character if not a valid escape
+                        result.push('\\');
+                        result.push(next);
                     }
                 }
             } else {
                 // Preserve trailing backslash
-                result.push(c);
+                result.push('\\');
+            }
+        } else if c == '$' {
+            // Handle environment variables
+            let mut var_name = String::new();
+            while let Some(&next_char) = chars.peek() {
+                if next_char.is_alphanumeric() || next_char == '_' {
+                    var_name.push(next_char);
+                    chars.next();
+                } else {
+                    break;
+                }
+            }
+            if let Ok(value) = env::var(&var_name) {
+                result.push_str(&value);
+            } else {
+                // If the variable is not found, leave it as is
+                result.push('$');
+                result.push_str(&var_name);
             }
         } else {
             result.push(c);
@@ -292,4 +319,3 @@ fn interpret_special_characters(input: &str) -> String {
 
     result
 }
- 
