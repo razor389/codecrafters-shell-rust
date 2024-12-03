@@ -91,30 +91,58 @@ fn main() {
         } 
         // Check if the command starts with 'cat'
         if command.starts_with("cat ") {
-            // Extract the file paths after 'cat '
-            let file_paths = &command[4..];
-
-            // Split the file paths and process each
-            for file_path in file_paths.split_whitespace() {
-                // Remove quotes (single or double) around the file path
-                let cleaned_path = if file_path.starts_with('\'') && file_path.ends_with('\'') {
-                    &file_path[1..file_path.len() - 1]
-                } else if file_path.starts_with('"') && file_path.ends_with('"') {
-                    &file_path[1..file_path.len() - 1]
-                } else {
-                    file_path
-                };
-
-                // Attempt to read the file
-                match fs::read_to_string(cleaned_path) {
+            // Extract the arguments after 'cat '
+            let args = &command[4..];
+            
+            // Parse arguments to handle quoted paths
+            let mut file_paths = vec![];
+            let mut current_path = String::new();
+            let mut in_quotes = false;
+            let mut quote_char = '\0';
+        
+            for c in args.chars() {
+                match c {
+                    '\'' | '"' if !in_quotes => {
+                        // Start a quoted path
+                        in_quotes = true;
+                        quote_char = c;
+                    }
+                    c if c == quote_char && in_quotes => {
+                        // End a quoted path
+                        in_quotes = false;
+                        file_paths.push(current_path.clone());
+                        current_path.clear();
+                    }
+                    ' ' if !in_quotes => {
+                        // Space outside quotes indicates the end of a path
+                        if !current_path.is_empty() {
+                            file_paths.push(current_path.clone());
+                            current_path.clear();
+                        }
+                    }
+                    _ => {
+                        // Append characters to the current path
+                        current_path.push(c);
+                    }
+                }
+            }
+        
+            // Add any remaining path
+            if !current_path.is_empty() {
+                file_paths.push(current_path);
+            }
+        
+            // Process each file path
+            for file_path in file_paths {
+                match fs::read_to_string(&file_path) {
                     Ok(content) => print!("{}", content),
                     Err(err) => eprintln!("cat: {}: {}", file_path, err),
                 }
             }
-
+        
             // Explicitly print the prompt for the next command
             continue;
-        }
+        }        
 
          // Try to run the command as an executable with arguments
          else if !command.is_empty() {
