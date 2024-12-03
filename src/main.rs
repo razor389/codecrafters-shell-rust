@@ -36,7 +36,8 @@ fn main() {
             let mut in_quotes = false;
             let mut quote_char = '\0';
         
-            for c in echo_message.chars() {
+            let mut chars = echo_message.chars().peekable();
+            while let Some(c) = chars.next() {
                 match c {
                     '\'' | '"' if !in_quotes => {
                         // Start a quoted segment
@@ -55,6 +56,17 @@ fn main() {
                         }
                         result.push(' ');
                         current_segment.clear();
+                    }
+                    '\\' if !in_quotes => {
+                        // Outside quotes: treat backslash as escape for space
+                        if let Some(&next) = chars.peek() {
+                            if next == ' ' {
+                                result.push(' ');
+                                chars.next(); // Consume the escaped space
+                            } else {
+                                current_segment.push(c); // Preserve literal backslash
+                            }
+                        }
                     }
                     _ if in_quotes => {
                         // Append to the current quoted segment
