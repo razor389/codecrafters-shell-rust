@@ -27,11 +27,24 @@ fn main() {
 
         // Check if the command starts with 'echo'
         if command.starts_with("echo ") {
-            // Extract the part after 'echo ' and print it
-            let echo_message = &command[5..]; // Get everything after 'echo '
-            println!("{}", echo_message);
-        } 
+            // Extract the part after 'echo '
+            let echo_message = &command[5..];
         
+            if echo_message.starts_with('\'') && echo_message.ends_with('\'') {
+                // Handle single quotes: treat as literal
+                let trimmed_message = &echo_message[1..echo_message.len() - 1];
+                println!("{}", trimmed_message);
+            } else if echo_message.starts_with('"') && echo_message.ends_with('"') {
+                // Handle double quotes: interpret special characters
+                let trimmed_message = &echo_message[1..echo_message.len() - 1];
+                let interpreted_message = interpret_special_characters(trimmed_message);
+                println!("{}", interpreted_message);
+            } else {
+                // Default behavior: print the message as-is
+                println!("{}", echo_message);
+            }
+        }
+
         // Handle the 'cd' command
         else if command.starts_with("cd ") {
             let target_dir = &command[3..]; // Extract the directory path after 'cd '
@@ -117,3 +130,44 @@ fn run_command(executable: &str, args: &[&str]) -> Result<String, String> {
         Err(String::from_utf8_lossy(&output.stderr).to_string())
     }
 }
+
+// Function to interpret special characters within double quotes
+fn interpret_special_characters(input: &str) -> String {
+    let mut result = String::new();
+    let mut chars = input.chars().peekable();
+
+    while let Some(c) = chars.next() {
+        match c {
+            '\\' => {
+                // Handle escaped characters
+                if let Some(escaped) = chars.next() {
+                    match escaped {
+                        'n' => result.push('\n'),
+                        't' => result.push('\t'),
+                        '\\' => result.push('\\'),
+                        _ => result.push(escaped),
+                    }
+                }
+            }
+            '$' => {
+                // Handle environment variables
+                let mut var_name = String::new();
+                while let Some(&next_char) = chars.peek() {
+                    if next_char.is_alphanumeric() || next_char == '_' {
+                        var_name.push(next_char);
+                        chars.next();
+                    } else {
+                        break;
+                    }
+                }
+                if let Ok(value) = env::var(&var_name) {
+                    result.push_str(&value);
+                }
+            }
+            _ => result.push(c),
+        }
+    }
+
+    result
+}
+      
