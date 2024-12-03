@@ -61,16 +61,12 @@ fn main() {
                         // Outside quotes: treat backslash as escape for space
                         if let Some(&next) = chars.peek() {
                             if next == ' ' {
-                                result.push(' ');
+                                result.push(' '); // Add a space
                                 chars.next(); // Consume the escaped space
                             } else {
                                 current_segment.push(c); // Preserve literal backslash
                             }
                         }
-                    }
-                    _ if in_quotes => {
-                        // Append to the current quoted segment
-                        current_segment.push(c);
                     }
                     ' ' if !in_quotes => {
                         // Add a space between unquoted parts
@@ -81,7 +77,7 @@ fn main() {
                         }
                     }
                     _ => {
-                        // Append to the current unquoted segment
+                        // Append to the current segment
                         current_segment.push(c);
                     }
                 }
@@ -97,7 +93,7 @@ fn main() {
         
             // Continue to the next command
             continue;
-        }        
+        }                
 
         // Handle the 'cd' command
         if command.starts_with("cd ") || command == "cd" {
