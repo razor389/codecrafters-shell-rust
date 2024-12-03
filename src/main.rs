@@ -93,7 +93,7 @@ fn main() {
         if command.starts_with("cat ") {
             // Extract the arguments after 'cat '
             let args = &command[4..];
-            
+        
             // Parse arguments to handle quoted paths
             let mut file_paths = vec![];
             let mut current_path = String::new();
@@ -132,17 +132,21 @@ fn main() {
                 file_paths.push(current_path);
             }
         
-            // Process each file path
+            // Process each file path in order and concatenate results
+            let mut output = String::new();
             for file_path in file_paths {
                 match fs::read_to_string(&file_path) {
-                    Ok(content) => print!("{}", content),
+                    Ok(content) => output.push_str(&content),
                     Err(err) => eprintln!("cat: {}: {}", file_path, err),
                 }
             }
         
+            // Print the concatenated output
+            print!("{}", output);
+        
             // Explicitly print the prompt for the next command
             continue;
-        }        
+        }                
 
          // Try to run the command as an executable with arguments
          else if !command.is_empty() {
