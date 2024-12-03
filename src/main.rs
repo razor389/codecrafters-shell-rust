@@ -30,27 +30,57 @@ fn main() {
             // Extract the part after 'echo '
             let echo_message = &command[5..];
         
-            if echo_message.starts_with('\'') && echo_message.ends_with('\'') {
-                // Handle single quotes: treat as literal
-                let trimmed_message = &echo_message[1..echo_message.len() - 1];
-                println!("{}", trimmed_message);
-            } else if echo_message.starts_with('"') && echo_message.ends_with('"') {
-                // Handle double quotes: interpret special characters
-                let trimmed_message = &echo_message[1..echo_message.len() - 1];
-                let interpreted_message = interpret_special_characters(trimmed_message);
-                println!("{}", interpreted_message);
-            } else {
-                // Normalize spaces: Split, trim, and join
-                let normalized_message = echo_message
-                    .split_whitespace()
-                    .collect::<Vec<&str>>()
-                    .join(" ");
-                println!("{}", normalized_message);
+            // Parse and process arguments while handling quotes
+            let mut result = String::new();
+            let mut current_segment = String::new();
+            let mut in_quotes = false;
+            let mut quote_char = '\0';
+        
+            for c in echo_message.chars() {
+                match c {
+                    '\'' | '"' if !in_quotes => {
+                        // Start a quoted segment
+                        in_quotes = true;
+                        quote_char = c;
+                    }
+                    c if c == quote_char && in_quotes => {
+                        // End a quoted segment
+                        in_quotes = false;
+                        result.push_str(&current_segment);
+                        result.push(' ');
+                        current_segment.clear();
+                    }
+                    _ if in_quotes => {
+                        // Append to the current quoted segment
+                        current_segment.push(c);
+                    }
+                    ' ' if !in_quotes => {
+                        // Add a space between unquoted parts
+                        if !current_segment.is_empty() {
+                            result.push_str(&current_segment);
+                            result.push(' ');
+                            current_segment.clear();
+                        }
+                    }
+                    _ => {
+                        // Append to the current unquoted segment
+                        current_segment.push(c);
+                    }
+                }
             }
-
-            // Explicitly print the prompt for the next command
+        
+            // Add any remaining segment
+            if !current_segment.is_empty() {
+                result.push_str(&current_segment);
+            }
+        
+            // Trim trailing space and print
+            println!("{}", result.trim());
+        
+            // Continue to the next command
             continue;
         }
+        
 
         // Handle the 'cd' command
         if command.starts_with("cd ") || command == "cd" {
