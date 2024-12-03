@@ -85,7 +85,7 @@ fn main() {
         
             // Continue to the next command
             continue;
-        }
+        }        
 
         // Handle the 'cd' command
         if command.starts_with("cd ") || command == "cd" {
@@ -249,37 +249,36 @@ fn interpret_special_characters(input: &str) -> String {
     let mut chars = input.chars().peekable();
 
     while let Some(c) = chars.next() {
-        match c {
-            '\\' => {
-                // Handle escaped characters
-                if let Some(escaped) = chars.next() {
-                    match escaped {
-                        'n' => result.push('\n'),
-                        't' => result.push('\t'),
-                        '\\' => result.push('\\'),
-                        _ => result.push(escaped),
+        if c == '\\' {
+            // Handle escaped characters
+            if let Some(&next) = chars.peek() {
+                match next {
+                    'n' => {
+                        result.push('\n');
+                        chars.next(); // Consume 'n'
+                    }
+                    't' => {
+                        result.push('\t');
+                        chars.next(); // Consume 't'
+                    }
+                    '\\' => {
+                        result.push('\\');
+                        chars.next(); // Consume '\\'
+                    }
+                    _ => {
+                        // Preserve the backslash if it's not escaping a valid character
+                        result.push(c);
                     }
                 }
+            } else {
+                // Preserve trailing backslash
+                result.push(c);
             }
-            '$' => {
-                // Handle environment variables
-                let mut var_name = String::new();
-                while let Some(&next_char) = chars.peek() {
-                    if next_char.is_alphanumeric() || next_char == '_' {
-                        var_name.push(next_char);
-                        chars.next();
-                    } else {
-                        break;
-                    }
-                }
-                if let Ok(value) = env::var(&var_name) {
-                    result.push_str(&value);
-                }
-            }
-            _ => result.push(c),
+        } else {
+            result.push(c);
         }
     }
 
     result
 }
-      
+ 
