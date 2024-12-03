@@ -274,16 +274,33 @@ fn interpret_special_characters(input: &str) -> String {
     while let Some(c) = chars.next() {
         if c == '\\' {
             // Handle escaped characters
-            if let Some(next) = chars.next() {
+            if let Some(&next) = chars.peek() {
                 match next {
-                    'n' => result.push('\n'),
-                    't' => result.push('\t'),
-                    '\\' => result.push('\\'),
-                    '"' => result.push('"'), // Handle escaped double quote
-                    '$' => result.push('$'),  // Handle escaped dollar sign
+                    'n' => {
+                        result.push('\n');
+                        chars.next(); // Consume 'n'
+                    }
+                    't' => {
+                        result.push('\t');
+                        chars.next(); // Consume 't'
+                    }
+                    '\\' => {
+                        result.push('\\');
+                        chars.next(); // Consume '\'
+                    }
+                    '"' => {
+                        result.push('"');
+                        chars.next(); // Consume '"'
+                    }
+                    '$' => {
+                        result.push('$');
+                        chars.next(); // Consume '$'
+                    }
                     _ => {
-                        // Preserve the backslash and the character if not a valid escape
+                        // Preserve the backslash and the character
+                        result.push('\\');
                         result.push(next);
+                        chars.next(); // Consume the character
                     }
                 }
             } else {
@@ -314,4 +331,3 @@ fn interpret_special_characters(input: &str) -> String {
 
     result
 }
-
