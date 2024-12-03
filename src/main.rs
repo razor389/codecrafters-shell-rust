@@ -93,13 +93,27 @@ fn main() {
         if command.starts_with("cat ") {
             // Extract the file paths after 'cat '
             let file_paths = &command[4..];
+
             // Split the file paths and process each
             for file_path in file_paths.split_whitespace() {
-                match fs::read_to_string(file_path) {
+                // Remove quotes (single or double) around the file path
+                let cleaned_path = if file_path.starts_with('\'') && file_path.ends_with('\'') {
+                    &file_path[1..file_path.len() - 1]
+                } else if file_path.starts_with('"') && file_path.ends_with('"') {
+                    &file_path[1..file_path.len() - 1]
+                } else {
+                    file_path
+                };
+
+                // Attempt to read the file
+                match fs::read_to_string(cleaned_path) {
                     Ok(content) => print!("{}", content),
                     Err(err) => eprintln!("cat: {}: {}", file_path, err),
                 }
             }
+
+            // Explicitly print the prompt for the next command
+            continue;
         }
 
          // Try to run the command as an executable with arguments
