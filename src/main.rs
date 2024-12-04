@@ -375,20 +375,42 @@ fn parse_command_line(input: &str) -> Vec<String> {
     let mut current_token = String::new();
     let mut in_quotes = false;
     let mut quote_char = '\0';
-    let mut escape_next = false;
-
     let mut chars = input.chars().peekable();
-    while let Some(c) = chars.next() {
-        if escape_next {
-            // Handle escaped character
-            current_token.push(c);
-            escape_next = false;
-            continue;
-        }
 
+    while let Some(c) = chars.next() {
         match c {
             '\\' => {
-                escape_next = true;
+                if in_quotes {
+                    if quote_char == '"' {
+                        // Inside double quotes
+                        if let Some(&next_char) = chars.peek() {
+                            match next_char {
+                                '\\' | '"' | '$' | '`' | '\n' => {
+                                    chars.next(); // Consume the next character
+                                    current_token.push(next_char);
+                                }
+                                _ => {
+                                    // Backslash is preserved
+                                    current_token.push('\\');
+                                }
+                            }
+                        } else {
+                            // Trailing backslash, preserve it
+                            current_token.push('\\');
+                        }
+                    } else {
+                        // Inside single quotes, backslash is literal
+                        current_token.push('\\');
+                    }
+                } else {
+                    // Outside quotes, backslash escapes the next character
+                    if let Some(next_char) = chars.next() {
+                        current_token.push(next_char);
+                    } else {
+                        // Trailing backslash, preserve it
+                        current_token.push('\\');
+                    }
+                }
             }
             '\'' | '"' => {
                 if in_quotes {
