@@ -240,34 +240,46 @@ fn main() {
             continue;
         }                
 
-         // Try to run the command as an executable with arguments
-         else if !command.is_empty() {
-            let mut parts = command.split_whitespace();
-            if let Some(executable) = parts.next() {
-                let args: Vec<&str> = parts.collect();
-                
-                if let Some(executable_path) = find_in_path(executable) {
-                    // Execute the command with arguments
-                    match run_command(&executable_path, &args) {
-                        Ok(output) => print!("{}", output),
-                        Err(err) => eprintln!("Error: {}", err),
-                    }
+        // Try to run the command as an executable with arguments
+        else if !command.is_empty() {
+            // Parse the command line into tokens, respecting quotes and escapes
+            let tokens = parse_command_line(command);
+
+            if let Some(command_name) = tokens.get(0) {
+                let args = &tokens[1..];
+
+                // Attempt to find the executable
+                let executable_path = if command_name.contains('/') {
+                    // If the command contains a slash, treat it as a path
+                    command_name.clone()
+                } else if let Some(path) = find_in_path(command_name) {
+                    path
                 } else {
-                    println!("{}: command not found", executable);
+                    println!("{}: command not found", command_name);
+                    continue;
+                };
+
+                // Execute the command with arguments
+                match run_command(&executable_path, &args) {
+                    Ok(output) => print!("{}", output),
+                    Err(err) => eprintln!("{}", err),
                 }
             }
             continue;
         }
+
     }
 }
 
 // Function to search for an executable in the system's PATH
 fn find_in_path(executable: &str) -> Option<String> {
-    if let Ok(path_var) = env::var("PATH") {
+    if executable.contains('/') {
+        if fs::metadata(executable).is_ok() {
+            return Some(executable.to_string());
+        }
+    } else if let Ok(path_var) = env::var("PATH") {
         for path in path_var.split(':') {
             let full_path = format!("{}/{}", path, executable);
-
-            // Check if the file exists and is executable
             if fs::metadata(&full_path).is_ok() {
                 return Some(full_path);
             }
@@ -276,12 +288,13 @@ fn find_in_path(executable: &str) -> Option<String> {
     None
 }
 
+
 // Function to run a command with arguments
-fn run_command(executable: &str, args: &[&str]) -> Result<String, String> {
+fn run_command(executable: &str, args: &[String]) -> Result<String, String> {
     let output = Command::new(executable)
         .args(args)
         .output()
-        .map_err(|e| format!("Failed to execute '{}': {}", executable, e))?;
+        .map_err(|e| format!("{}: {}", executable, e))?;
 
     if output.status.success() {
         Ok(String::from_utf8_lossy(&output.stdout).to_string())
@@ -289,6 +302,7 @@ fn run_command(executable: &str, args: &[&str]) -> Result<String, String> {
         Err(String::from_utf8_lossy(&output.stderr).to_string())
     }
 }
+
 
 // Function to interpret special characters within double quotes
 fn interpret_special_characters(input: &str) -> String {
@@ -354,4 +368,60 @@ fn interpret_special_characters(input: &str) -> String {
     }
 
     result
+}
+
+fn parse_command_line(input: &str) -> Vec<String> {
+    let mut tokens = Vec::new();
+    let mut current_token = String::new();
+    let mut in_quotes = false;
+    let mut quote_char = '\0';
+    let mut escape_next = false;
+
+    let mut chars = input.chars().peekable();
+    while let Some(c) = chars.next() {
+        if escape_next {
+            // Handle escaped character
+            current_token.push(c);
+            escape_next = false;
+            continue;
+        }
+
+        match c {
+            '\\' => {
+                escape_next = true;
+            }
+            '\'' | '"' => {
+                if in_quotes {
+                    if c == quote_char {
+                        // End of quoted segment
+                        in_quotes = false;
+                    } else {
+                        // Different quote inside quotes is literal
+                        current_token.push(c);
+                    }
+                } else {
+                    // Start of quoted segment
+                    in_quotes = true;
+                    quote_char = c;
+                }
+            }
+            ' ' | '\t' if !in_quotes => {
+                // Token separator
+                if !current_token.is_empty() {
+                    tokens.push(current_token.clone());
+                    current_token.clear();
+                }
+            }
+            _ => {
+                current_token.push(c);
+            }
+        }
+    }
+
+    // Add any remaining token
+    if !current_token.is_empty() {
+        tokens.push(current_token);
+    }
+
+    tokens
 }
