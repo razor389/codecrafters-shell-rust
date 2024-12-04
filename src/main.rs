@@ -105,8 +105,9 @@ fn main() {
                             }
                             result.push_str(&current_segment);
                             current_segment.clear();
-                            needs_space = true;
+                            
                         }
+                        needs_space = true;
                         
                     }
                     _ => {
