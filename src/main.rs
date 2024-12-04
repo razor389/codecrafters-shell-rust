@@ -100,15 +100,13 @@ fn main() {
                     ' ' if !in_quotes => {
                         // Space outside quotes indicates separation between words
                         if !current_segment.is_empty() {
-                            //if !result.is_empty() {
-                            //    result.push(' ');
-                            //}
+                            if !result.is_empty() {
+                                result.push(' ');
+                            }
                             result.push_str(&current_segment);
                             current_segment.clear();
-                            needs_space = true;
-                            
                         }
-                        
+                        needs_space = true;
                         
                     }
                     _ => {
@@ -124,9 +122,9 @@ fn main() {
         
             // Add any remaining segment
             if !current_segment.is_empty() {
-                //if !result.is_empty() && needs_space {
-                //    result.push(' ');
-                //}
+                if !result.is_empty() && needs_space {
+                    result.push(' ');
+                }
                 result.push_str(&current_segment);
             }
         
